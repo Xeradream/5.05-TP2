@@ -1,5 +1,4 @@
 import {ProductData, ProductsCategoryData} from "tp-kit/types"
-import internal from "stream";
 
 export type ProductFiltersResult = {
   categoriesSlugs : string[],
@@ -21,9 +20,10 @@ export type NextPageProps<T = Record<string, string>> = {
 
 export type ProductLineData = {
   product : ProductData,
-  qty: number
+  qty : number,
 };
 
 export type CartData = {
-  lines: ProductLineData[]
-};
+  lines : ProductLineData[],
+  count : number,
+}
