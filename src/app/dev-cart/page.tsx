@@ -1,11 +1,20 @@
 "use client";
-import { PRODUCTS_CATEGORY_DATA } from "tp-kit/data";
-import { Button, ProductCardLayout, SectionContainer } from "tp-kit/components";
+import {PRODUCTS_CATEGORY_DATA} from "tp-kit/data";
+import {Button, ProductCardLayout, SectionContainer} from "tp-kit/components";
 import {ProductCartLine} from "tp-kit/components/products";
-import {FormattedPrice} from "tp-kit/components/data-display";
+import {addLine, computeCartTotal, removeLine, updateLine, useCartDataStore} from "../../hooks/use-cart";
+import {useEffect, useState} from "react";
+
 const products = PRODUCTS_CATEGORY_DATA[0].products.slice(0, 3);
 
 export default function DevCartPage() {
+    const lines = useCartDataStore((state) => state.lines);
+    const [total, setTotal] = useState(computeCartTotal(lines));
+
+    useEffect(() => {
+        setTotal(computeCartTotal(lines));
+    }, [lines]);
+
     return (
         <SectionContainer
             className="py-36"
@@ -17,7 +26,15 @@ export default function DevCartPage() {
                     <ProductCardLayout
                         key={product.id}
                         product={product}
-                        button={<Button variant={"ghost"} fullWidth>Ajouter au panier</Button>}
+                        button={
+                            <Button
+                                variant={"ghost"}
+                                fullWidth
+                                onClick={() => addLine(product)}
+                            >
+                                Ajouter au panier
+                            </Button>
+                        }
                     />
                 ))}
             </section>
@@ -25,13 +42,41 @@ export default function DevCartPage() {
 
             {/* Panier */}
             <section className="w-full lg:w-1/3 space-y-8">
-                <ProductCartLine product={products[0]} qty={1}></ProductCartLine>
-                <div className="flex justify-between rounded-lg h-auto text-default overflow-hidden">
-                    <h1>Total:</h1>
-                    <FormattedPrice className="text-right" price={products[0].price * 1} />
+                <div
+                    className="overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 bg-white p-8 flex justify-between flex-col"
+                >
+                    <p
+                        className="text-2xl mb-4"
+                    >
+                        MON PANIER
+                    </p>
+                    {
+                        lines.map((line) => (
+                            <ProductCartLine
+                                className={"mb-4"}
+                                key={line.product.id}
+                                product={line.product}
+                                qty={line.qty}
+                                onDelete={() => {
+                                    removeLine(line.product.id);
+                                }}
+                                onQtyChange={(qty) => {
+                                    if (qty === 0) {
+                                        removeLine(line.product.id);
+                                    } else {
+                                        updateLine({product: line.product, qty: qty});
+                                    }
+                                }}
+                            />
+                        ))
+                    }
+                    <div
+                        className="flex justify-between items-center mt-4"
+                    >
+                        <p>Total</p>
+                        <p>{total.toFixed(2).toString().replace('.', ',') + " €"}</p>
+                    </div>
                 </div>
-                <Button fullWidth>Commander</Button>
-                <Button variant={"outline"} fullWidth>Vider le panier</Button>
             </section>
             {/* /Panier */}
         </SectionContainer>
