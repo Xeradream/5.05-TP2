@@ -1,0 +1,91 @@
+import { create } from 'zustand'
+import {CartData, ProductLineData} from "../types";
+import {ProductData} from "tp-kit/types";
+import {set} from "zod";
+
+const useCartDataStore = create<CartData>()((set) => ({
+    lines: [],
+}))
+
+/**
+ * Ajoute une nouvelle ligne au panier.
+ * Si le produit est déjà dans le panier, augmente la quantité de 1.
+ *
+ * @param product
+ */
+export function addLine(product: ProductData) {
+    useCartDataStore((state) => {
+        const existingLineIndex = state.lines.findIndex(
+            (line) => line.product.id === product.id
+        );
+
+        if (existingLineIndex !== -1) {
+            state.lines[existingLineIndex].qty += 1;
+        } else {
+            state.lines.push({product, qty:1})
+        }
+    });
+}
+
+/**
+ * Modifie une ligne produit du panier
+ *
+ * @param line
+ */
+export function updateLine(line: ProductLineData) {
+    useCartDataStore.setState((state) => {
+        const lineId = state.lines.findIndex(cartLine => cartLine.product.id === line.product.id)
+
+        state.lines[lineId] = line
+
+        return {lines: [...state.lines]}
+    })
+}
+
+/**
+ * Supprime la ligne produit du panier
+ *
+ * @param productId
+ * @returns
+ */
+export function removeLine(productId: number) {
+    useCartDataStore((state) => {
+        const existingLineIndex = state.lines.findIndex(
+            (line) => line.product.id === productId
+        );
+
+        if (existingLineIndex !== -1 && existingLineIndex > 1) {
+            state.lines[existingLineIndex].qty -= 1;
+        } else {
+            state.lines.splice(existingLineIndex);
+        }
+    });
+}
+
+/**
+ * Vide le contenu du panier actuel
+ */
+export function clearCart() {
+
+    useCartDataStore((state) => {
+        state.lines.splice(0);
+    });
+}
+
+/**
+ * Calcule le total d'une ligne du panier
+ */
+export function computeLineSubTotal(line: ProductLineData): number {
+    return (line.product.price * line.qty);
+}
+
+/**
+ * Calcule le total du panier
+ */
+export function computeCartTotal(lines: ProductLineData[]): number {
+    let total = 0;
+
+    lines.forEach(line => total += line.product.price * line.qty);
+
+    return total;
+}
